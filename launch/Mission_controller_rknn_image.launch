@@ -1,0 +1,28 @@
+<launch>
+  <arg name="drone_ns" default="Drone_2" />
+  <arg name="rknn_model_path" default="/home/orangepi/catkin_ws/src/animal_yolov5/rknnModel/best_i8.rknn" />
+  <arg name="camera_id" default="0" />
+  <arg name="publish_raw_image" default="true" />
+  <arg name="publish_debug_image" default="true" />
+  <arg name="show_window" default="false" />
+
+  <rosparam command="load" file="$(find drone_code)/config/mission_controller.yaml" />
+
+  <node pkg="drone_code" name="path_planning" type="path_planning_node" output="screen" />
+
+  <group ns="$(arg drone_ns)">
+    <node pkg="drone_code" name="mission_controller" type="mission_controller_node" output="screen">
+      <rosparam file="$(find drone_code)/config/mission_controller.yaml" command="load" />
+    </node>
+
+    <node pkg="drone_code" name="animal_detector" type="animal_detector_rknn.py" output="screen">
+      <rosparam file="$(find drone_code)/config/mission_controller.yaml" command="load" />
+      <param name="model_type" value="rknn" />
+      <param name="model_path" value="$(arg rknn_model_path)" />
+      <param name="camera_id" value="$(arg camera_id)" />
+      <param name="publish_raw_image" value="$(arg publish_raw_image)" />
+      <param name="publish_debug_image" value="$(arg publish_debug_image)" />
+      <param name="show_window" value="$(arg show_window)" />
+    </node>
+  </group>
+</launch>

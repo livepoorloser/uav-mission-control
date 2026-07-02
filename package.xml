@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!-- 功能：drone_code ROS 包的元数据和依赖声明。 -->
+
+<package format="2">
+  <name>drone_code</name>
+  <version>0.0.0</version>
+  <description>The drone_code package</description>
+  <maintainer email="user@todo.todo">user</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>mavros_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>opencv2</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>roslib</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>mavros_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>opencv2</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>roslib</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+</package>

@@ -1,0 +1,7 @@
+<!-- 功能：单独启动路径规划节点进行路径生成测试。 -->
+
+<launch>
+  <rosparam command="load" file="$(find drone_code)/config/mission_controller.yaml" />
+
+  <node pkg="drone_code" type="path_planning_node" name="path_planning" output="screen" />
+</launch>

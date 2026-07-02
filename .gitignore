@@ -1,0 +1,40 @@
+# Build outputs
+build/
+devel/
+install/
+log/
+logs/
+.catkin_tools/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ROS/runtime logs
+*.bag
+*.db3
+*.log
+
+# Machine learning datasets and generated training artifacts
+datasets/
+yolov5-master/
+runs/
+weights/
+*.pt
+*.pth
+*.onnx
+*.rknn
+*.engine
+
+# Local temporary files
+*.tmp
+*.bak
+*.swp

@@ -1,0 +1,13 @@
+<!-- 功能：启动完整无人机任务流程，包括路径规划、任务控制和检测节点。 -->
+
+<launch>
+  <arg name="use_rknn_detector" default="true" />
+  <rosparam command="load" file="$(find drone_code)/config/mission_controller.yaml" />
+
+  <node pkg="drone_code" type="path_planning_node" name="path_planning" output="screen" />
+  <node pkg="drone_code" type="mission_controller_node" name="mission_controller" output="screen">
+    <rosparam file="$(find drone_code)/config/mission_controller.yaml" command="load" />
+  </node>
+  <node if="$(arg use_rknn_detector)" pkg="drone_code" type="animal_detector_rknn.py" name="animal_detector" output="screen" />
+  <node unless="$(arg use_rknn_detector)" pkg="drone_code" type="animal_detector_node" name="animal_detector" output="screen" />
+</launch>

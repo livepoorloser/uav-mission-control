@@ -1,0 +1,383 @@
+# 功能：无人机任务控制、路径规划、视觉检测和降落流程的统一配置。
+
+path_planning:
+  shelter_source: "param"
+  shelter_wait_timeout: 2.0
+  manual_shelter_locations:
+    - "A2B3"
+    - "A2B4"
+    - "A2B5"
+  return_to_takeoff: true
+  takeoff_cell: [0, 0]
+  serial_port: ""
+  write_serial_port: ""
+  baudrate: 115200
+  landing_candidates:
+    - [0, 2]
+    - [2, 0]
+
+animal_detector:
+  model_type: "onnx"
+  model_path: ""
+  classes: ["tiger", "peacock", "monkey", "elephant", "wolf"]
+  obj_thresh: 0.55
+  score_thresh: 0.50
+  nms_thresh: 0.25
+  outputs_already_sigmoid: true
+  img_size: 640
+  pose_topic: "mavros/local_position/pose"
+  camera_id: 0
+  frame_width: 640
+  frame_height: 480
+  loop_hz: 15.0
+  npu_core: -1
+  region_width_ratio: 0.3
+  region_height_ratio: 0.2
+  min_area: 500
+  max_area: 25000
+  pause_base_seconds: 2.0
+  pause_per_object_seconds: 1.0
+  show_window: false
+  publish_raw_image: true
+  raw_image_topic: "vision/raw_image"
+  raw_frame_id: "animal_detector_camera"
+  publish_debug_image: true
+  debug_image_topic: "vision/detection_image"
+  debug_frame_id: "animal_detector_camera"
+  enabled_by_default: true
+  control_enabled: false
+  control_scale: 0.001
+  control_hold_seconds: 1.0
+
+# 飞机位姿来源配置：决定 mission_controller 从哪个 ROS 话题读取当前位置、姿态和速度。
+VehiclePose:
+  # 是否使用里程计 Odometry 作为飞机位姿来源。
+  useOdometry: false
+  # 是否使用 MAVROS 本地位置 /mavros/local_position/pose 作为飞机位姿来源。
+  useLocal: true
+  # 是否使用视觉位姿 /mavros/vision_pose/pose 作为飞机位姿来源。
+  useVision: false
+  # Odometry 位姿订阅话题名，useOdometry 为 true 时使用。
+  subscribe_odometry_topic: "mavros/odometry/in"
+  # MAVROS 本地位姿订阅话题名，useLocal 为 true 时使用。
+  subscribe_local_topic: "mavros/local_position/pose"
+  # 视觉位姿订阅话题名，useVision 为 true 时使用。
+  subscribe_vision_topic: "mavros/vision_pose/pose"
+  # MAVROS 本地速度订阅话题名，用于判断飞机是否稳定、刹车和速度阻尼。
+  subscribe_velocity_topic: "mavros/local_position/velocity_local"
+
+# 视觉总开关配置：控制飞行任务过程中是否启用视觉识别链路。
+Vision:
+
+  # 是否允许在飞行过程中启用动物识别；false 时飞行阶段不处理视觉结果。
+  enable_during_flight: true
+
+# 视觉伺服闭环配置：把检测目标的像素误差转换成飞机 XY 修正量或速度指令。
+VisionServo:
+  enable: true
+  use_primary_target: true
+  mode: jacobian
+  control_mode: velocity
+  control_axis: both
+  use_yaw_compensation: true
+  target_pixel_x: -9.5
+  target_pixel_y: 0.0
+  pixel_to_world_x: 0.002278
+  pixel_to_world_y: 0.002267
+  world_to_pixel_scale_x: 439.02628474
+  world_to_pixel_scale_y: 441.04615938
+  jacobian_sign_x: 1.0
+  jacobian_sign_y: -1.0
+  jacobian_jxx: -61.78
+  jacobian_jxy: 301.47
+  jacobian_jyx: 220.72
+  jacobian_jyy: -63.73
+  jacobian_damping: 150.0
+  min_effective_altitude: 0.10
+  kp_x: 0.10
+  kp_y: 0.07
+  kd_x: 0.04
+  kd_y: 0.03
+  error_filter_alpha: 0.60
+  max_step_xy: 0.005
+  max_velocity_xy: 0.020
+  max_command_delta_xy: 0.006
+  max_error_jump_px: 45.0
+  reject_error_jump: false
+  verbose_log: true
+  tune_log_enable: true
+  tune_log_period: 0.25
+  deadband_px: 22.0
+  update_period: 0.20
+  max_total_offset_xy: 0.45
+  settle_time: 1.5
+  hold_brake_enable: true
+  hold_release_px: 40.0
+  hold_velocity_xy: 0.010
+  velocity_damping_gain: 0.65
+  velocity_damping_max_xy: 0.010
+  brake_velocity_gain: 1.2
+  brake_max_velocity_xy: 0.014
+  brake_velocity_timeout: 1.2
+  stable_speed_xy: 0.034
+  stable_time: 0.6
+  center_lock_enable: true
+  center_lock_time: 0.35
+  center_lock_release_px: 40.0
+  center_lock_velocity_xy: 0.010
+  center_lock_pull_gain: 0.22
+  center_lock_exit_speed_xy: 0.050
+  center_lock_exit_speed_frames: 5
+  center_lock_history_frames: 5
+  center_lock_inner_pull_px: 14.0
+  center_lock_inner_velocity_xy: 0.010
+  center_lock_inner_pull_gain: 0.12
+  center_lock_inner_brake_speed_xy: 0.040
+  center_continuous_enable: true
+  center_continuous_radius_px: 40.0
+  center_soft_error_px: 20.0
+  center_soft_pull_gain: 0.28
+  center_soft_velocity_xy: 0.010
+  center_damping_gain: 1.10
+  center_damping_max_xy: 0.018
+  center_command_filter_alpha: 0.40
+  outer_slowdown_enable: true
+  outer_slowdown_inner_px: 40.0
+  outer_slowdown_outer_px: 90.0
+  outer_slowdown_min_velocity_xy: 0.010
+  outer_slowdown_damping_gain: 0.55
+  outer_slowdown_damping_max_xy: 0.010
+  calibration_step_xy: 0.04
+  calibration_hold_time: 3.0
+  camera_offset_x: 0.043
+  camera_offset_y: 0.0
+  camera_offset_z: -0.077
+  laser_offset_x: 0.068
+  laser_offset_y: 0.0
+  laser_offset_z: -0.062
+  log_enable: true
+  log_path: "/home/orangepi/vision_servo_log.csv"
+DetectionFilter:
+  # 是否启用检测结果过滤。
+  enable: false
+  # 是否只对主目标进行过滤和后续处理。
+  use_primary_target: true
+  # 是否把同类别、距离很近的检测框聚类，减少同一动物多框问题。
+  cluster_same_class: true
+  # 同类别检测框聚类的像素半径，小于该距离认为可能是同一目标。
+  cluster_radius_px: 45.0
+  # 检测框中心相对参考点的最大 x 方向像素偏差，超过则过滤。
+  max_abs_dx: 120.0
+  # 检测框中心相对参考点的最大 y 方向像素偏差，超过则过滤。
+  max_abs_dy: 120.0
+  # 检测框中心相对参考点的最大欧氏像素半径，超过则过滤。
+  max_radius_px: 150.0
+  # 最低检测置信度阈值，低于该值的目标会被过滤。
+  min_score: 0.0
+  # 最小检测框面积阈值，低于该面积的目标会被过滤。
+  min_area_px: 0.0
+
+# 相机投影配置：用相机内参、畸变和安装关系把图像像素投影到地面坐标。
+CameraProjection:
+  # 是否启用相机标定投影功能。
+  enable: true
+  # 相机图像宽度，单位像素。
+  image_width: 640
+  # 相机图像高度，单位像素。
+  image_height: 480
+  # 相机 x 方向焦距内参，单位像素。
+  fx: 439.02628474
+  # 相机 y 方向焦距内参，单位像素。
+  fy: 441.04615938
+  # 相机主点 x 坐标，单位像素。
+  cx: 290.66629141
+  # 相机主点 y 坐标，单位像素。
+  cy: 248.82425635
+  # 径向畸变参数 k1，由棋盘格相机标定得到。
+  k1: -0.08539842
+  # 径向畸变参数 k2，由棋盘格相机标定得到。
+  k2: 0.22763436
+  # 切向畸变参数 p1，由棋盘格相机标定得到。
+  p1: 0.00176190
+  # 切向畸变参数 p2，由棋盘格相机标定得到。
+  p2: -0.00690340
+  # 径向畸变参数 k3，由棋盘格相机标定得到。
+  k3: -0.19778367
+  # 是否使用畸变参数进行像素去畸变。
+  use_distortion: true
+  # 地面平面在世界/局部坐标系中的 z 值，用于射线与地面求交。
+  ground_z_world: 0.0
+  # 射线向下分量的最小绝对值，过小会导致投影不稳定。
+  min_ray_down_z: 0.001
+
+  # 机体系约定：+x 前方，+y 左方，+z 上方；下面参数假设相机朝下安装。
+  # 如果图像在飞机上旋转了，优先调 body_x_from_image_down 和 body_y_from_image_right。
+  # 是否使用“朝下相机”的简化安装模型。
+  use_downward_mount: true
+  # 图像向下方向对应机体系 x 的符号，决定像素 v 轴如何映射到机体前后。
+  body_x_from_image_down: -1.0
+  # 图像向右方向对应机体系 y 的符号，决定像素 u 轴如何映射到机体左右。
+  body_y_from_image_right: -1.0
+
+  # 相机中心相对飞控/机体中心的位置，单位米。
+  # 相机相对机体中心的 x 偏移。
+  camera_offset_x: 0.043
+  # 相机相对机体中心的 y 偏移。
+  camera_offset_y: 0.0
+  # 相机相对机体中心的 z 偏移。
+  camera_offset_z: -0.077
+
+  # 当安装方向符号基本正确后，用下面三个小角度做机体系安装误差修正。
+  # 相机安装滚转角修正，单位度。
+  correction_roll_deg: 0.0
+  # 相机安装俯仰角修正，单位度。
+  correction_pitch_deg: 0.0
+  # 相机安装偏航角修正，单位度。
+  correction_yaw_deg: 0.0
+
+# 当前格子投影过滤配置：把目标像素投影到地面后，判断是否属于当前格子。
+GridProjectionFilter:
+  # 是否启用基于相机投影的当前格子过滤。
+  enable: false
+  # 是否拒绝投影点落在当前格子之外的检测结果。
+  reject_outside_current_grid: false
+  # 投影失败时是否直接拒绝该目标；false 表示投影失败不一定过滤。
+  reject_invalid_projection: false
+  # 当前格子 x 方向尺寸，单位米。
+  cell_size_x: 0.5
+  # 当前格子 y 方向尺寸，单位米。
+  cell_size_y: 0.5
+  # 当前格子 x 方向额外容忍边界，单位米。
+  margin_x: 0.10
+  # 当前格子 y 方向额外容忍边界，单位米。
+  margin_y: 0.10
+
+# 重复计数抑制配置：避免同一只动物在相邻航点或短时间内被重复计数。
+DetectionDedup:
+  # 是否启用重复计数抑制。
+  enable: true
+  # 判断两个检测是否属于同一目标的 XY 最大位置差，单位米。
+  max_position_delta_xy: 0.55
+  # 判断两个检测是否属于同一目标的 Z 最大位置差，单位米。
+  max_position_delta_z: 0.35
+  # 同一目标被记录后的冷却时间，冷却期内不再重复计数，单位秒。
+  cooldown_seconds: 300.0
+
+# 任务规划配置：控制航点、悬停、返航、降落和网格映射逻辑。
+MissionPlanner:
+
+  # 是否使用外部规划好的路径；false 时使用 PathPoints 中的固定航点。
+  use_planned_path: false
+  # 等待外部规划路径的超时时间，单位秒。
+  path_wait_timeout: 8.0
+  # 是否要求外部路径完整后才开始执行。
+  require_complete_plan: true
+  # 任务结束后是否回到起飞点降落。
+  land_at_takeoff: true
+  # 网格边长，单位米，用于格子编号和地图坐标换算。
+  cell_size: 0.5
+  # 网格地图原点 x 坐标，单位米。
+  origin_x: 0.0
+  # 网格地图原点 y 坐标，单位米。
+  origin_y: 0.0
+  # 巡检网格行数，用于路径规划和检测结果网格编号。
+  grid_rows: 7
+  # 巡检网格列数，用于路径规划和检测结果网格编号。
+  grid_cols: 9
+  # 起飞目标高度，单位米。
+  takeoff_z: 1.2
+  # 位姿数据超时时间，超过该时间认为定位不可用。
+  pose_timeout: 2.0
+  # XY 到点位置容差，单位米。
+  pos_tolerance: 0.18
+  # Z 高度到点容差，单位米。
+  alt_tolerance: 0.18
+  # 地图坐标系相对飞机局部坐标系的 yaw 偏移，单位度。
+  map_yaw_offset_deg: 0.0
+
+  # 普通航点悬停时间，单位秒。
+  waypoint_hover_time: 30.0
+  # 检测到目标后的额外悬停时间，单位秒。
+  detection_hover_time: 0.0
+  # 返回点/返航后的悬停时间，单位秒。
+  return_hover_time: 0.0
+  # 是否使用滑翔式下降过程。
+  use_glide_landing: true
+  # 滑翔下降斜率角，单位度。
+  glide_slope_deg: 45.0
+  # 是否在滑翔下降后交给 PX4 自动降落。
+  use_px4_auto_land: true
+  # 是否在滑翔下降完成后切换为自动降落。
+  auto_land_after_glide: true
+  # 交给 PX4 自动降落的高度阈值，单位米。
+  auto_land_handoff_height: 0.30
+  # 自动降落前保持 yaw 的时间，单位秒。
+  auto_land_yaw_hold_time: 0.0
+  # Offboard 降落阶段的保持时间，单位秒。
+  offboard_land_hold_time: 1.0
+  # Offboard 降落阶段 XY 容差，单位米。
+  offboard_land_xy_tolerance: 0.18
+  # Offboard 降落阶段 Z 容差，单位米。
+  offboard_land_z_tolerance: 0.08
+  # 落地后是否强制解锁/断电，通常调试时保持 false 更安全。
+  force_disarm_after_landing: false
+  # 强制 disarm 前等待时间，单位秒。
+  force_disarm_delay: 0.0
+  # 正常 disarm 重试周期，单位秒。
+  normal_disarm_retry_period: 0.3
+  # 强制 disarm 重试周期，单位秒。
+  force_disarm_retry_period: 0.2
+  # 巡检行方向，1 或 -1 用于决定蛇形遍历方向。
+  row_direction: -1.0
+  # 是否交换网格 x/y 轴，用于适配赛场坐标和飞机坐标定义差异。
+  swap_grid_axes: true
+
+# 轨迹优化配置：对航点之间的轨迹时间、速度、加速度和 yaw 变化做约束。
+TrajectoryOptimizer:
+  # 是否启用轨迹优化；false 时航点之间通常按原始直线/固定逻辑执行。
+  enable: false
+  # 是否在航点之间插值 yaw，使朝向变化更连续。
+  interpolate_yaw: true
+  # 轨迹规划期望巡航速度，单位 m/s。
+  nominal_speed: 0.5
+  # 轨迹规划允许的最大加速度，单位 m/s^2。
+  max_acceleration: 0.4
+  # 单段轨迹最小时间，单位秒，防止点太近导致速度过大。
+  min_segment_time: 1.5
+  # 单段轨迹最大时间，单位秒；0 表示不限制最大值。
+  max_segment_time: 0.0
+  # 最大 yaw 角速度，单位 rad/s。
+  max_yaw_rate: 0.4
+  # 允许的最大轨迹跟踪误差，单位米。
+  max_tracking_error: 0.60
+
+# 固定航点配置：use_planned_path 为 false 时，任务按这里的起飞点、巡检点和降落点执行。
+PathPoints:
+
+  # 起飞点配置。
+  takeoff_point:
+    # 起飞点位置 [x, y, z]，单位米。
+    pos: [0.0, 0.0, 1.2]
+    # 起飞点目标 yaw，单位弧度。
+    yaw: 0.0
+    # 到达起飞点后的悬停时间，单位秒。
+    hover_time: 3.0
+
+  # 巡检航点列表，按顺序执行。
+  waypoints:
+    # 第 1 个巡检航点。
+    - # 航点位置 [x, y, z]，单位米。
+      pos: [0.5, 0.0, 1.2]
+      # 航点目标 yaw，单位弧度。
+      yaw: 0.0
+      # 到达该航点后的悬停时间，单位秒。
+      hover_time: 30.0
+
+  # 降落点配置。
+  land_point:
+    # 降落点位置 [x, y, z]，单位米。
+    pos: [0.0, 0.0, 0.0]
+    # 降落点目标 yaw，单位弧度。
+    yaw: 0.0
+    # 到达降落点后的保持时间，单位秒。
+    hover_time: 5.0
